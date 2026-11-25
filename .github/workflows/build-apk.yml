@@ -1,0 +1,55 @@
+name: Build debug APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle 8.7 and generate wrapper
+        # The wrapper jar is not committed; install Gradle 8.7 and generate it.
+        run: |
+          curl -sL "https://services.gradle.org/distributions/gradle-8.7-bin.zip" \
+            -o /tmp/gradle-8.7-bin.zip
+          unzip -q /tmp/gradle-8.7-bin.zip -d /opt/gradle
+          /opt/gradle/gradle-8.7/bin/gradle wrapper \
+            --gradle-version 8.7 \
+            --distribution-type bin \
+            --project-dir "$GITHUB_WORKSPACE"
+          chmod +x gradlew
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-clone-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30
