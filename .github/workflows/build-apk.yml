@@ -21,7 +21,18 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        # NOTE: android-actions/setup-android@v3 fails on current runners — its
+        # default package list includes the obsolete `tools` package
+        # ("Failed to find package 'tools'", sdkmanager exit 1). The runner
+        # image already ships a full Android SDK, so install what AGP needs
+        # directly with the preinstalled sdkmanager instead.
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
       - name: Set up Gradle 8.7 and generate wrapper
         # The wrapper jar is not committed; install Gradle 8.7 and generate it.
