@@ -128,7 +128,7 @@ fun SkillDetailScreen(
                     }
 
                     MarkdownText(
-                        markdown = s.body,
+                        text = s.body,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),

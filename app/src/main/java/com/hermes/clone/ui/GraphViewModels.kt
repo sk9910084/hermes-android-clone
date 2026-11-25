@@ -1,6 +1,7 @@
 package com.hermes.clone.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -15,7 +16,7 @@ import com.hermes.clone.AppGraph
 @Composable
 inline fun <reified VM : ViewModel> graphViewModel(
     key: String? = null,
-    crossinline build: (AppGraph) -> VM,
+    crossinline build: @DisallowComposableCalls (AppGraph) -> VM,
 ): VM {
     val appContext = LocalContext.current.applicationContext
     val factory = remember(key) {
